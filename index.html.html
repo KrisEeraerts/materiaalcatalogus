@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Materiaalcatalogus & Kostprijsberekening</title>
+<style>
+  :root { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:#1f2937; background:#f1f5f9; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:0 0 40px; }
+  header { background:#1e3a8a; color:#fff; padding:16px 20px; }
+  header h1 { margin:0; font-size:1.25rem; }
+  header p { margin:4px 0 0; font-size:.85rem; opacity:.85; }
+  .toolbar { padding:14px 20px 0; max-width:1200px; margin:0 auto; }
+  .toolbar input[type=search] { width:100%; padding:10px 12px; border-radius:10px; border:1px solid #cbd5e1; font-size:1rem; }
+  .tabs { display:flex; gap:8px; padding:14px 20px 0; max-width:1200px; margin:0 auto; }
+  .tabs button { flex:1; padding:10px; border-radius:10px 10px 0 0; border:1px solid #cbd5e1; border-bottom:none; background:#e2e8f0; cursor:pointer; font-size:.95rem; color:#475569; }
+  .tabs button.active { background:#fff; color:#1e3a8a; font-weight:600; }
+  .wrap { display:flex; gap:20px; padding:20px; max-width:1200px; margin:0 auto; flex-wrap:wrap; align-items:flex-start; }
+  .main { flex:2 1 480px; background:#fff; border:1px solid #cbd5e1; border-top:none; border-radius:0 0 12px 12px; padding:16px; min-height:300px; }
+  .side { flex:1 1 280px; position:sticky; top:12px; }
+  h2 { font-size:1rem; margin:0 0 10px; color:#1e3a8a; }
+  /* catalogus */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .prod { border:1px solid #e2e8f0; border-radius:12px; padding:10px; text-align:center; background:#f8fafc; }
+  .prod.selected { border:2px solid #1e3a8a; background:#eef2ff; }
+  .prod .thumb { width:100%; height:70px; display:flex; align-items:center; justify-content:center; font-size:2rem; border-radius:8px; background:#fff; margin-bottom:6px; overflow:hidden; }
+  .prod .thumb img { max-width:100%; max-height:100%; object-fit:contain; }
+  .prod .nm { font-size:.85rem; font-weight:600; min-height:2.2em; }
+  .prod .pr { font-size:.8rem; color:#475569; margin:2px 0 8px; }
+  .prod input.qty { width:80%; padding:5px; border:1px solid #cbd5e1; border-radius:6px; font-size:.9rem; text-align:right; }
+  .prod .nm2 { font-size:.7rem; color:#64748b; margin-top:2px; }
+  .cat { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin:14px 0 8px; }
+  .cat:first-child { margin-top:0; }
+  /* calculator */
+  .calc { background:#eef2ff; border:2px solid #c7d2fe; border-radius:12px; padding:12px; margin-bottom:14px; }
+  .calc h3 { margin:0 0 10px; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; color:#3730a3; }
+  .calc .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+  .calc label { font-size:.75rem; color:#3730a3; display:block; margin-bottom:3px; }
+  .calc input, .calc select { padding:6px; border:1px solid #c7d2fe; border-radius:8px; font-size:.95rem; }
+  .calc input { width:95px; }
+  .calc .out { font-weight:600; color:#1e3a8a; margin-top:10px; }
+  button.link, button.add { background:#4338ca; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:.9rem; cursor:pointer; }
+  button.add:hover, button.link:hover { background:#1e3a8a; }
+  /* logboek */
+  .logform { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px; }
+  .logform label { font-size:.75rem; color:#475569; display:block; margin-bottom:3px; }
+  .logform input, .logform textarea { padding:8px; border:1px solid #cbd5e1; border-radius:8px; font-size:.95rem; }
+  .logform textarea { flex:1 1 200px; }
+  table.log { width:100%; border-collapse:collapse; }
+  table.log th, table.log td { padding:7px 8px; font-size:.9rem; border-bottom:1px solid #e2e8f0; text-align:left; }
+  table.log thead th { color:#64748b; font-size:.75rem; text-transform:uppercase; }
+  table.log td.uren { text-align:right; }
+  table.log .del { background:none; border:none; color:#dc2626; cursor:pointer; font-size:1rem; }
+  /* winkelwagen */
+  .cart table { width:100%; background:#fff; border-radius:12px; border-collapse:collapse; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .cart th, .cart td { padding:8px 10px; text-align:left; font-size:.9rem; }
+  .cart thead th { background:#e2e8f0; font-size:.75rem; text-transform:uppercase; color:#475569; }
+  .cart td input[type=number] { width:70px; padding:4px; border:1px solid #cbd5e1; border-radius:6px; text-align:right; }
+  .cart .del { background:none; border:none; color:#dc2626; cursor:pointer; font-size:1rem; padding:2px 6px; }
+  .cart tfoot td { font-weight:600; }
+  .cart tfoot tr.total td { font-size:1.05rem; color:#1e3a8a; }
+  .tarief { background:#fff; border-radius:12px; padding:12px; margin:14px 0; box-shadow:0 1px 3px rgba(0,0,0,.08); display:flex; align-items:center; gap:10px; }
+  .tarief input { padding:8px; border:1px solid #cbd5e1; border-radius:8px; width:110px; text-align:right; font-size:1rem; }
+  .actions { margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; }
+  .actions button { flex:1; padding:10px; border-radius:10px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:.9rem; }
+  .actions button:hover { background:#f8fafc; }
+  .backup { background:#fff; border-radius:12px; padding:12px; margin-top:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); display:none; }
+  .backup.open { display:block; }
+  .backup p { font-size:.8rem; color:#475569; margin:0 0 8px; }
+  .backup textarea { width:100%; height:70px; border:1px solid #cbd5e1; border-radius:8px; padding:8px; font-size:.8rem; font-family:monospace; }
+  .backup .btns { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+  .backup .btns button { padding:8px 12px; border-radius:8px; border:1px solid #cbd5e1; background:#fff; cursor:pointer; font-size:.85rem; }
+  .hint { font-size:.75rem; color:#64748b; margin-top:10px; }
+  @media print {
+    .tabs, .toolbar, header p, .actions, .calc, .logform { display:none; }
+    body { padding:0; background:#fff; }
+    .side { position:static; }
+    .cart table, .tarief { box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛠️ Materiaalcatalogus &amp; Kostprijsberekening</h1>
+  <p>Kies materialen, bereken zelf de aantallen en houd je werkuren bij</p>
+</header>
+
+<div class="toolbar">
+  <input id="search" type="search" placeholder="🔍 Zoek een product…" oninput="render()" />
+</div>
+
+<div class="tabs">
+  <button id="tabCat" class="active" onclick="showTab('cat')">📚 Catalogus</button>
+  <button id="tabLog" onclick="showTab('log')">📖 Logboek werkuren</button>
+</div>
+
+<div class="wrap">
+  <main class="main">
+    <div id="viewCat"></div>
+    <div id="viewLog" style="display:none"></div>
+  </main>
+
+  <section class="side">
+    <h2>🧾 Jouw lijst</h2>
+    <div class="cart">
+      <table>
+        <thead><tr><th>Product</th><th>Aantal</th><th>Prijs</th><th></th></tr></thead>
+        <tbody id="cartBody"></tbody>
+        <tfoot id="cartFoot"></tfoot>
+      </table>
+    </div>
+
+    <div class="tarief">
+      <label for="tarief">💰 Uurtarief</label>
+      <input id="tarief" type="number" min="0" step="0.5" placeholder="0" onchange="setTarief(this.value)"> € /u
+    </div>
+
+    <div class="actions">
+      <button onclick="print()">🖨️ Printen / PDF</button>
+      <button onclick="clearAll()">🗑️ Alles wissen</button>
+      <button onclick="saveFile()">💾 Opslaan</button>
+      <button onclick="document.getElementById('loadFile').click()">📂 Bestand laden</button>
+      <button onclick="toggleBackup()">🔐 Herstelcode</button>
+      <button onclick="vraagProduct()">✉️ Product aanvragen</button>
+    </div>
+    <input type="file" id="loadFile" accept=".json,application/json" style="display:none" onchange="loadFilePicked(this)">
+    <div class="backup" id="backupBox">
+      <p><strong>Herstelcode</strong> — kopieer deze code en bewaar ze veilig (agenda, Smartschool, notitieboek). Plak ze later opnieuw om alles te herstellen: lijst, logboek en uur­tarief.</p>
+      <textarea id="codeArea" readonly onclick="this.select()"></textarea>
+      <div class="btns">
+        <button onclick="copyCode()">📋 Kopiëren</button>
+        <button onclick="pasteDialog()">📥 Code plakken / herstellen</button>
+      </div>
+    </div>
+    <p class="hint">Alles wordt lokaal opgeslagen. Wil je zeker zijn dat je niets kwijtraakt (wissen van cache, andere toestel)? Gebruik dan <strong>Opslaan</strong> of de <strong>herstelcode</strong>.</p>
+  </section>
+</div>
+
+<script>
+/* ============================================================
+   PRODUCTEN — door collega's aan te passen
+   naam | cat | prijs (€ per eenheid) | eenheid (m², m, stuk, …) | btw (6 of 21) | afb
+   'afb' = emoji OF een link naar een foto, bv. "https://…/mdf.jpg"
+   Nieuw product? Kopieer een regel en pas de waarden aan.
+   ============================================================ */
+/* ---------- CATALOGUS: producten (fallback) ----------
+   Wordt gebruikt als het bestand materialen.csv NIET gevonden wordt.
+   Zodra materialen.csv naast index.html staat, wint dat bestand. */
+let PRODUCTEN = [
+  { naam: "MDF 18 mm",           cat: "Plaatmateriaal", prijs: 28.00, eenheid: "m²",   btw: 21, afb: "🪵" },
+  { naam: "Multiplex 12 mm",     cat: "Plaatmateriaal", prijs: 24.00, eenheid: "m²",   btw: 21, afb: "🪵" },
+  { naam: "Berken triplex 9 mm", cat: "Plaatmateriaal", prijs: 19.50, eenheid: "m²",   btw: 21, afb: "🪵" },
+  { naam: "Fineer berken 1,5 mm",cat: "Plaatmateriaal", prijs: 12.00, eenheid: "m²",   btw: 21, afb: "🪵" },
+  { naam: "Hardhout beuken lat", cat: "Massief hout",   prijs: 4.50,  eenheid: "m",    btw: 21, afb: "📏" },
+  { naam: "Ronde staaf 12 mm",   cat: "Massief hout",   prijs: 3.20,  eenheid: "m",    btw: 21, afb: "📏" },
+  { naam: "Vurenhout lat 21×45", cat: "Massief hout",   prijs: 1.90,  eenheid: "m",    btw: 21, afb: "📏" },
+  { naam: "Schroeven 4×40",      cat: "Verbindingen",   prijs: 3.50,  eenheid: "100 st", btw: 21, afb: "🔩" },
+  { naam: "Doppen/hoeken",       cat: "Verbindingen",   prijs: 2.10,  eenheid: "stuk", btw: 21, afb: "🔗" },
+  { naam: "Scharnier",           cat: "Verbindingen",   prijs: 1.75,  eenheid: "stuk", btw: 21, afb: "🔗" },
+  { naam: "Beugelverbinder",     cat: "Verbindingen",   prijs: 1.95,  eenheid: "stuk", btw: 21, afb: "🔗" },
+  { naam: "Houtlijm",            cat: "Afwerking",      prijs: 4.20,  eenheid: "fles", btw: 21, afb: "🧴" },
+  { naam: "Beits 250 ml",        cat: "Afwerking",      prijs: 8.95,  eenheid: "blik", btw: 21, afb: "🎨" },
+  { naam: "Vernis mat 250 ml",   cat: "Afwerking",      prijs: 9.50,  eenheid: "blik", btw: 21, afb: "🎨" },
+  { naam: "Schuurpapier (set)",  cat: "Afwerking",      prijs: 5.40,  eenheid: "set",  btw: 21, afb: "🧽" },
+  { naam: "Grondverf wit 250 ml",cat: "Afwerking",      prijs: 7.25,  eenheid: "blik", btw: 21, afb: "🎨" },
+  { naam: "Wasmiddel",           cat: "Afwerking",      prijs: 3.10,  eenheid: "fles", btw: 21, afb: "🧴" },
+  { naam: "Koperen buis 15 mm",  cat: "Metalen",        prijs: 6.80,  eenheid: "m",    btw: 21, afb: "🔧" },
+  { naam: "Aluminium profiel 20×20", cat: "Metalen",    prijs: 8.40,  eenheid: "m",    btw: 21, afb: "🔧" },
+  { naam: "Stalen hoekprofiel 25×25", cat: "Metalen",   prijs: 5.60,  eenheid: "m",    btw: 21, afb: "🔧" },
+  { naam: "Draad/garenstaal 3 mm", cat: "Metalen",      prijs: 2.30,  eenheid: "m",    btw: 21, afb: "🔧" },
+  { naam: "Kabel 3×1,5 mm²",     cat: "Elektriciteit",  prijs: 1.15,  eenheid: "m",    btw: 21, afb: "🔌" },
+  { naam: "Fitting E27",         cat: "Elektriciteit",  prijs: 2.40,  eenheid: "stuk", btw: 21, afb: "💡" },
+  { naam: "Lamp LED 3 W",        cat: "Elektriciteit",  prijs: 3.95,  eenheid: "stuk", btw: 21, afb: "💡" },
+  { naam: "Schakelaar",          cat: "Elektriciteit",  prijs: 3.80,  eenheid: "stuk", btw: 21, afb: "🔘" },
+  { naam: "Stekker",             cat: "Elektriciteit",  prijs: 2.60,  eenheid: "stuk", btw: 21, afb: "🔌" },
+  { naam: "Slot",                cat: "Mechaniek",      prijs: 5.30,  eenheid: "stuk", btw: 21, afb: "🔑" },
+  { naam: "Wiel 40 mm",          cat: "Mechaniek",      prijs: 1.85,  eenheid: "stuk", btw: 21, afb: "⚙️" },
+  { naam: "Katrol",              cat: "Mechaniek",      prijs: 2.75,  eenheid: "stuk", btw: 21, afb: "⚙️" },
+  { naam: "Spie 4 mm",           cat: "Mechaniek",      prijs: 0.55,  eenheid: "stuk", btw: 21, afb: "⚙️" },
+  { naam: "Behandelhoes",        cat: "Veiligheid",     prijs: 0.35,  eenheid: "stuk", btw: 21, afb: "🥽" },
+  { naam: "Oorbeschermers (set)",cat: "Veiligheid",     prijs: 1.20,  eenheid: "set",  btw: 21, afb: "🥽" },
+  { naam: "Werkhandschoenen",    cat: "Veiligheid",     prijs: 4.60,  eenheid: "paar", btw: 21, afb: "🧤" },
+  { naam: "Stofkapje",           cat: "Veiligheid",     prijs: 0.25,  eenheid: "stuk", btw: 21, afb: "😷" },
+];
+
+/* UURTARIEF standaardwaarde (docent kan dit aanpassen, leerling kan overschrijven) */
+const STANDAARD_UURTARIEF = 12;
+
+/* E-mailadres van de beheerder voor productaanvragen (pas dit aan naar uw schooladres) */
+const BEHEERDER_EMAIL = "kris.eeraerts@sjabi.be";
+
+/* Naam van het bestand met de materialenlijst (moet naast index.html staan) */
+const CSV_BESTAND = "materialen.csv";
+
+/* ---- applicatielogica (hieronder hoef je niets te wijzigen) ---- */
+const fmt = new Intl.NumberFormat("nl-BE", { style: "currency", currency: "EUR" });
+const fmtNum = (n) => (Math.round(n * 10000) / 10000).toString().replace(".", ",");
+const store = {
+  get: (k, d) => { try { return JSON.parse(localStorage.getItem("pb_" + k)) ?? d; } catch (e) { return d; } },
+  set: (k, v) => localStorage.setItem("pb_" + k, JSON.stringify(v)),
+};
+let cart = store.get("cart", {});
+let log = store.get("log", []);
+let tarief = store.get("tarief", STANDAARD_UURTARIEF);
+document.getElementById("tarief").value = tarief;
+
+function showTab(t) {
+  document.getElementById("viewCat").style.display = t === "cat" ? "" : "none";
+  document.getElementById("viewLog").style.display = t === "log" ? "" : "none";
+  document.getElementById("tabCat").classList.toggle("active", t === "cat");
+  document.getElementById("tabLog").classList.toggle("active", t === "log");
+}
+
+/* ---------- CATALOGUS ---------- */
+function render() {
+  const q = (document.getElementById("search").value || "").toLowerCase();
+  const view = document.getElementById("viewCat");
+  const m2 = PRODUCTEN.map((p, i) => ({ p, i })).filter(x => x.p.eenheid === "m²");
+  let html = "";
+
+  if (m2.length) {
+    html += '<div class="calc"><h3>📐 Oppervlakte-calculator (mm → m²)</h3><div class="row">' +
+      '<div><label>Lengte (mm)</label><input id="cLen" type="number" min="0" step="1"></div>' +
+      '<div><label>Breedte (mm)</label><input id="cBr" type="number" min="0" step="1"></div>' +
+      '<div><label>Stuks</label><input id="cSt" type="number" min="1" step="1" value="1"></div>' +
+      '<div><label>Product</label><select id="cProd">' +
+      m2.map(x => '<option value="' + x.i + '">' + x.p.naam + "</option>").join("") + "</select></div>" +
+      '<button class="link" onclick="calcM2()">Bereken</button></div>' +
+      '<div class="out" id="cOut"></div></div>';
+  }
+
+  const cats = [...new Set(PRODUCTEN.map(p => p.cat))];
+  for (const cat of cats) {
+    const items = PRODUCTEN.map((p, i) => ({ p, i })).filter(x => x.p.cat === cat && x.p.naam.toLowerCase().includes(q));
+    if (!items.length) continue;
+    html += '<div class="cat">' + cat + '</div><div class="grid">';
+    for (const { p, i } of items) {
+      const thumb = /^https?:\/\//.test(p.afb || "") ? '<img src="' + p.afb + '" alt="">' : (p.afb || "📦");
+      const hint = p.eenheid === "m²" ? 'placeholder="m² uit tool"' : 'placeholder="aantal"';
+      html += '<div class="prod' + (cart[i] ? " selected" : "") + '">' +
+        '<div class="thumb">' + thumb + "</div>" +
+        '<div class="nm">' + p.naam + "</div>" +
+        '<div class="pr">' + fmt.format(p.prijs) + " / " + p.eenheid + "</div>" +
+        '<input class="qty" id="qty' + i + '" type="number" min="0" step="0.0001" ' + hint + ' inputmode="decimal">' +
+        '<div class="nm2">aantal in ' + p.eenheid + "</div>" +
+        '<button class="add" onclick="add(' + i + ')">In lijst</button></div>';
+    }
+    html += "</div>";
+  }
+  view.innerHTML = html;
+  renderCart();
+}
+
+function calcM2() {
+  const len = Number(document.getElementById("cLen").value) || 0;
+  const br = Number(document.getElementById("cBr").value) || 0;
+  const st = Math.max(1, Math.round(Number(document.getElementById("cSt").value) || 1));
+  const m2 = (len * br) / 1000000 * st;
+  const idx = Number(document.getElementById("cProd").value);
+  document.getElementById("cOut").innerHTML = m2 > 0
+    ? "→ " + fmtNum(m2) + " m² = (lengte × breedte) : 1 000 000" + (st > 1 ? " × " + st + " stuks" : "") +
+      ' &nbsp;<button class="link" onclick="addValue(' + idx + "," + m2 + ')">In lijst</button>'
+    : "Vul lengte en breedte in (in mm).";
+  document.getElementById("qty" + idx).value = m2;
+}
+
+function addValue(idx, val) { cart[idx] = Math.round(((cart[idx] || 0) + val) * 10000) / 10000; store.set("cart", cart); render(); }
+function add(idx) {
+  const val = Number(String(document.getElementById("qty" + idx).value).replace(",", "."));
+  const n = Math.max(0, val || 0);
+  if (n === 0) { alert("Vul eerst een aantal in (bijvoorbeeld de berekende m²)."); return; }
+  addValue(idx, n);
+}
+function setQty(idx, val) {
+  const n = Math.max(0, Number(String(val).replace(",", ".")) || 0);
+  if (n === 0) delete cart[idx]; else cart[idx] = Math.round(n * 10000) / 10000;
+  store.set("cart", cart); render();
+}
+function del(idx) { delete cart[idx]; store.set("cart", cart); render(); }
+
+/* ---------- LOGBOEK ---------- */
+function renderLog() {
+  const view = document.getElementById("viewLog");
+  let html = "<h2>📖 Logboek werkuren</h2>" +
+    '<div class="logform">' +
+    '<div><label>Datum</label><input id="lDate" type="date"></div>' +
+    '<div><label>Werk (omschrijving)</label><input id="lDesc" type="text" placeholder="bv. platen opmaat zagen" style="width:220px"></div>' +
+    '<div><label>Uren</label><input id="lUur" type="number" min="0" step="0.25" style="width:80px"></div>' +
+    '<button class="link" onclick="addLog()">Toevoegen</button></div>';
+  html += '<table class="log"><thead><tr><th>Datum</th><th>Werk</th><th style="text-align:right">Uren</th><th></th></tr></thead><tbody>';
+  const today = new Date().toISOString().slice(0, 10);
+  html += log.length ? "" : '<tr><td colspan="4" style="color:#94a3b8;text-align:center;padding:20px 0;">Nog geen uren geregistreerd</td></tr>';
+  let tot = 0;
+  log.forEach((e, i) => {
+    tot += e.uren;
+    html += "<tr><td>" + e.datum + "</td><td>" + e.werk + '</td><td class="uren">' + fmtNum(e.uren) +
+      '</td><td><button class="del" onclick="delLog(' + i + ')">✕</button></td></tr>';
+  });
+  html += "</tbody><tfoot><tr><td colspan='2' style='font-weight:600'>Totaal uren</td><td class='uren' style='font-weight:600'>" + fmtNum(tot) + " u</td><td></td></tr>";
+  html += '<tr><td colspan="2" style="font-weight:600;color:#1e3a8a">Arbeidskost (' + fmtNum(tot) + " u × " + fmt.format(tarief) + ")</td>" +
+    '<td class="uren" style="font-weight:600;color:#1e3a8a">' + fmt.format(tot * tarief) + "</td><td></td></tr></tfoot></table>";
+  view.innerHTML = html;
+  document.getElementById("lDate").value = today;
+}
+function addLog() {
+  const datum = document.getElementById("lDate").value || new Date().toISOString().slice(0, 10);
+  const werk = document.getElementById("lDesc").value.trim() || "(zonder omschrijving)";
+  const uren = Math.max(0, Number(String(document.getElementById("lUur").value).replace(",", ".")) || 0);
+  if (uren === 0) { alert("Vul het aantal gewerkte uren in."); return; }
+  log.push({ datum, werk, uren });
+  store.set("log", log); renderLog(); renderCart();
+}
+function delLog(i) { log.splice(i, 1); store.set("log", log); renderLog(); renderCart(); }
+function setTarief(v) { tarief = Math.max(0, Number(String(v).replace(",", ".")) || 0); store.set("tarief", tarief); renderLog(); renderCart(); }
+
+/* ---------- TOTAALOVERZICHT ---------- */
+function renderCart() {
+  const body = document.getElementById("cartBody");
+  const foot = document.getElementById("cartFoot");
+  const keys = Object.keys(cart);
+  body.innerHTML = keys.length ? "" : '<tr><td colspan="4" style="color:#94a3b8;text-align:center;padding:20px 0;">Nog geen producten in je lijst</td></tr>';
+  let mat = 0, btwTotaal = 0;
+  for (const k of keys) {
+    const p = PRODUCTEN[k];
+    const lijn = p.prijs * cart[k];
+    mat += lijn;
+    btwTotaal += lijn - lijn / (1 + p.btw / 100);
+    body.insertAdjacentHTML("beforeend",
+      "<tr><td>" + p.naam + "</td>" +
+      '<td><input type="number" min="0" step="0.0001" value="' + cart[k] + '" onchange="setQty(' + k + ',this.value)"></td>' +
+      "<td>" + fmt.format(lijn) + "</td>" +
+      '<td><button class="del" onclick="del(' + k + ')">✕</button></td></tr>');
+  }
+  const uren = log.reduce((s, e) => s + e.uren, 0);
+  const arbeid = uren * tarief;
+  foot.innerHTML =
+    '<tr><td colspan="2">Materialen (waarvan btw)</td><td colspan="2">' + fmt.format(mat) + " (" + fmt.format(btwTotaal) + ")</td></tr>" +
+    '<tr><td colspan="2">Arbeidskost (' + fmtNum(uren) + " u × " + fmt.format(tarief) + ")</td><td colspan='2'>" + fmt.format(arbeid) + "</td></tr>" +
+    '<tr class="total"><td colspan="2">Kostprijs project</td><td colspan="2">' + fmt.format(mat + arbeid) + "</td></tr>";
+}
+
+function clearAll() {
+  cart = {}; log = []; store.set("cart", cart); store.set("log", log);
+  render(); renderLog();
+}
+
+/* ---------- BEWAARFUNCTIES (bestand + herstelcode) ---------- */
+function backupData() { return { v: 1, cart: cart, log: log, tarief: tarief }; }
+function applyBackup(d) {
+  if (!d || d.v !== 1) { alert("Dit bestand of deze code is niet geldig."); return; }
+  cart = {}; for (const k in d.cart) { const i = Number(k); if (PRODUCTEN[i]) cart[i] = d.cart[k]; }
+  log = Array.isArray(d.log) ? d.log : [];
+  tarief = Number(d.tarief) || 0;
+  document.getElementById("tarief").value = tarief;
+  store.set("cart", cart); store.set("log", log); store.set("tarief", tarief);
+  render(); renderLog();
+  alert("Je lijst en logboek zijn hersteld.");
+}
+
+/* Opslaan als bestand (JSON) */
+function saveFile() {
+  const data = JSON.stringify(backupData(), null, 1);
+  const blob = new Blob([data], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "project-lijst-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function loadFilePicked(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { try { applyBackup(JSON.parse(r.result)); } catch (e) { alert("Kon het bestand niet lezen."); } };
+  r.readAsText(f);
+  input.value = "";
+}
+
+/* Herstelcode: zelfde gegevens als tekst (base64) */
+function encodeBackup() { return btoa(unescape(encodeURIComponent(JSON.stringify(backupData())))); }
+function decodeBackup(code) { return JSON.parse(decodeURIComponent(escape(atob(code.trim())))); }
+
+function toggleBackup() {
+  const box = document.getElementById("backupBox");
+  const area = document.getElementById("codeArea");
+  if (box.classList.toggle("open")) area.value = encodeBackup();
+}
+function copyCode() {
+  const area = document.getElementById("codeArea");
+  area.select();
+  try { navigator.clipboard.writeText(area.value); } catch (e) { document.execCommand("copy"); }
+  alert("De code is gekopieerd. Bewaar ze op een veilige plaats (agenda, Smartschool, notitieboek).");
+}
+function pasteDialog() {
+  const code = prompt("Plak hier je herstelcode:");
+  if (!code) return;
+  try { applyBackup(decodeBackup(code)); } catch (e) { alert("Deze code is niet geldig."); }
+}
+
+/* ---------- PRODUCT AANVRAGEN (e-mail aan de beheerder) ---------- */
+function vraagProduct() {
+  const l = "\n";
+  const body =
+    "Gelieve een nieuw product toe te voegen aan de materiaalcatalogus:" + l + l +
+    "- naam:" + l +
+    "- categorie:" + l +
+    "- prijs (in € per eenheid):" + l +
+    "- eenheid (m², m, stuk, 100 st, fles, blik, set, kg, …):" + l +
+    "- btw (6 of 21):" + l +
+    "- link naar een foto (https://…):" + l +
+    "- leverancier (optioneel):" + l + l +
+    "Alvast bedankt!";
+  const url = "mailto:" + BEHEERDER_EMAIL +
+    "?subject=" + encodeURIComponent("Aanvraag nieuw product – materiaalcatalogus") +
+    "&body=" + encodeURIComponent(body);
+  window.location.href = url;
+}
+
+renderLog();
+render();
+
+/* ---------- EXTERNE MATERIAALLIJST INLEZEN (materialen.csv) ----------
+   Indien materialen.csv naast index.html staat, vervangt die lijst
+   de ingebouwde tabel hierboven. Formaat (scheidingsteken ;):
+   naam;cat;prijs;eenheid;btw;afb
+   MDF 18 mm;Plaatmateriaal;28.00;m²;21;🪵
+   --------------------------------------------------------- */
+async function laadCSV() {
+  try {
+    const r = await fetch(CSV_BESTAND);
+    if (!r.ok) return; /* geen csv gevonden: ingebouwde lijst blijft gelden */
+    const tekst = await r.text();
+    const regels = tekst.trim().split(/\r?\n/);
+    if (regels.length < 2) return;
+    const kop = regels[0].split(";").map(k => k.trim());
+    const rijen = [];
+    for (const regel of regels.slice(1)) {
+      if (!regel.trim()) continue;
+      const v = regel.split(";");
+      const o = {};
+      kop.forEach((k, i) => { o[k] = (v[i] !== undefined ? v[i] : "").trim(); });
+      rijen.push({
+        naam: o.naam || "(zonder naam)",
+        cat: o.cat || "Divers",
+        prijs: Number((o.prijs || "0").replace(",", ".")) || 0,
+        eenheid: o.eenheid || "stuk",
+        btw: Number(o.btw) || 21,
+        afb: o.afb || "📦",
+      });
+    }
+    if (rijen.length) { PRODUCTEN = rijen; render(); renderLog(); }
+  } catch (e) { /* offline of bestand ontbreekt: ingebouwde lijst blijft gelden */ }
+}
+laadCSV();
+</script>
+</body>
+</html>
