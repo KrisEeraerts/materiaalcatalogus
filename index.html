@@ -40,8 +40,8 @@
   .calc input, .calc select { padding:6px; border:1px solid #c7d2fe; border-radius:8px; font-size:.95rem; }
   .calc input { width:95px; }
   .calc .out { font-weight:600; color:#1e3a8a; margin-top:10px; }
-  button.link, button.add { background:#4338ca; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:.9rem; cursor:pointer; }
-  button.add:hover, button.link:hover { background:#1e3a8a; }
+  button., button.add { background:#4338ca; color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:.9rem; cursor:pointer; }
+  button.add:hover, button.:hover { background:#1e3a8a; }
   /* logboek */
   .logform { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px; }
   .logform label { font-size:.75rem; color:#475569; display:block; margin-bottom:3px; }
@@ -237,7 +237,10 @@ function render() {
     if (!items.length) continue;
     html += '<div class="cat">' + cat + '</div><div class="grid">';
     for (const { p, i } of items) {
-      const thumb = /^https?:\/\//.test(p.afb || "") ? '<img src="' + p.afb + '" alt="">' : (p.afb || "📦");
+            const afb = p.afb || "";
+      const isLink = /^https?:\/\//i.test(afb);
+      const isBestand = /\.(jpe?g|png|webp|gif|svg)$/i.test(afb);
+      const thumb = (isLink || isBestand) ? '<img src="' + afb + '" alt="' + p.naam + '">' : (afb || "📦");
       const hint = p.eenheid === "m²" ? 'placeholder="m² uit tool"' : 'placeholder="aantal"';
       html += '<div class="prod' + (cart[i] ? " selected" : "") + '">' +
         '<div class="thumb">' + thumb + "</div>" +
