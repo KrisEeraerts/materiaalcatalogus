@@ -265,7 +265,6 @@ function calcM2() {
     ? "→ <strong>" + fmtNum(m2) + " m²</strong>" +
       "<br>Vul dit aantal in bij het gewenste materiaal en klik daarna op \"In lijst\"."
     : "Vul lengte en breedte in (in mm).";
-  document.getElementById("qty" + idx).value = m2;
 }
 
 function addValue(idx, val) { cart[idx] = Math.round(((cart[idx] || 0) + val) * 10000) / 10000; store.set("cart", cart); render(); }
