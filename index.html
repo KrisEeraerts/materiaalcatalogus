@@ -225,10 +225,8 @@ function render() {
       '<div><label>Lengte (mm)</label><input id="cLen" type="number" min="0" step="1"></div>' +
       '<div><label>Breedte (mm)</label><input id="cBr" type="number" min="0" step="1"></div>' +
       '<div><label>Stuks</label><input id="cSt" type="number" min="1" step="1" value="1"></div>' +
-      '<div><label>Product</label><select id="cProd">' +
-      m2.map(x => '<option value="' + x.i + '">' + x.p.naam + "</option>").join("") + "</select></div>" +
       '<button class="link" onclick="calcM2()">Bereken</button></div>' +
-      '<div class="out" id="cOut"></div></div>';
+      '<div class="out" id="cOut">Vul lengte en breedte in (in mm).</div></div>';
   }
 
   const cats = [...new Set(PRODUCTEN.map(p => p.cat))];
