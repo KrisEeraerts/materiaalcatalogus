@@ -261,10 +261,9 @@ function calcM2() {
   const br = Number(document.getElementById("cBr").value) || 0;
   const st = Math.max(1, Math.round(Number(document.getElementById("cSt").value) || 1));
   const m2 = (len * br) / 1000000 * st;
-  const idx = Number(document.getElementById("cProd").value);
   document.getElementById("cOut").innerHTML = m2 > 0
-    ? "→ " + fmtNum(m2) + " m² = (lengte × breedte) : 1 000 000" + (st > 1 ? " × " + st + " stuks" : "") +
-      ' &nbsp;<button class="link" onclick="addValue(' + idx + "," + m2 + ')">In lijst</button>'
+    ? "→ <strong>" + fmtNum(m2) + " m²</strong>" +
+      "<br>Vul dit aantal in bij het gewenste materiaal en klik daarna op \"In lijst\"."
     : "Vul lengte en breedte in (in mm).";
   document.getElementById("qty" + idx).value = m2;
 }
