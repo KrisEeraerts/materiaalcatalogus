@@ -262,7 +262,7 @@ function calcM2() {
   const st = Math.max(1, Math.round(Number(document.getElementById("cSt").value) || 1));
   const m2 = (len * br) / 1000000 * st;
   document.getElementById("cOut").innerHTML = m2 > 0
-    ? "→ <strong>" + fmtNum(m2) + " m²</strong>" +
+    ? "→ <strong>" + fmtNum(m2) + " m²</strong> = (lengte × breedte) : 1 000 000" + (st > 1 ? " × " + st + " stuks" : "") +
       "<br>Vul dit aantal in bij het gewenste materiaal en klik daarna op \"In lijst\"."
     : "Vul lengte en breedte in (in mm).";
 }
